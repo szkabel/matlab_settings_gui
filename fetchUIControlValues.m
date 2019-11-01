@@ -42,6 +42,7 @@ function [ paramcell ] = fetchUIControlValues( paramarray , paramEditHandles, ch
 %                       - enum -> string
 %                       - multiple-enum -> cellarray of strings
 %                       - string -> string
+%                       - dir -> string
 %
 % COPYRIGHT
 % Settings Template Toolbox. All Rights Reversed. 
@@ -74,7 +75,11 @@ for i=1:length(paramEditHandles)
         paramcell{i} = get(paramEditHandles{i},'Value');
     elseif strcmp(paramarray{i}.type,'colorPicker')
         paramcell{i} = get(paramEditHandles{i},'BackgroundColor');
-    end
+    elseif strcmp(paramarray{i}.type,'dir')
+        paramcell{i} = get(paramEditHandles{i}{1},'String');        
+    elseif strcmp(paramarray{i}.type,'file')
+        paramcell{i} = get(paramEditHandles{i}{1},'String');        
+    end    
 end
 
 if nargin>=3

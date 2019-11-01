@@ -33,6 +33,13 @@ function [ paramTextHandles, paramEditHandles] = generateUIControls( paramarray,
 %                       - 'multiple-enum'** Displays a list from which
 %                       multiple entries can be selected [vector of indices
 %                       to be selected]
+%                       - 'dir' Displays a browse button or the user may
+%                       copy-paste the directory into the field [string]
+%                       - 'file'** Displays a browse button or the user may
+%                       copy-paste the file path into the field It can be
+%                       used to query file name for a new file OR also for
+%                       selecting an existing file on the system (see **
+%                       for the fileOpenType field)[string]
 %                   .default: Optional. A default value to put to the input
 %                   in advance. The type of the default field is indicated
 %                   in brackets "[]" above.
@@ -44,7 +51,15 @@ function [ paramTextHandles, paramEditHandles] = generateUIControls( paramarray,
 %                   the options to be listed.
 %                   .lim: A vector with length of 2 specifying the minimum
 %                   and maximum (in this order) values to be allowed for
-%                   the slider.
+%                   the slider.                  
+%                   .fileOpenType This a string value for file selection.
+%                   Use either 'get' or 'put'. Use get if you want to query
+%                   for an existing file and put for new files
+%                   .filter (Optional) A filter specifying which filetypes
+%                   to be able to select via the browser button. Check the
+%                   documentation of uigetfile and uiputfile. However this
+%                   does not  prevent the user from copying an inproper
+%                   file into the text field.
 %                       
 %   parentHandle    handle to the parent object to which we're going to add
 %                   the uicontrols. It must have a position property.
@@ -129,7 +144,19 @@ for i=1:nofParams
             paramEditHandles{i} = uicontrol('Parent',parentHandle,'Units','pixels','Style','listbox','BackgroundColor','white','String',paramarray{i}.values,'min',0,'max',length(paramarray{i}.values));            
             if isfield(paramarray{i},'default')
                 set(paramEditHandles{i},'value',paramarray{i}.default);
-            end            
+            end
+        case 'dir'
+            paramEditHandles{i}{1} = uicontrol('Parent',parentHandle,'Units','pixels','Style','edit','BackgroundColor','white');
+            paramEditHandles{i}{2} = uicontrol('Parent',parentHandle,'Units','pixels','Style','pushbutton','String','browse','UserData',struct('listID',i),'Callback',@(hObject,eventdata)browseCallback(hObject,eventdata,guidata(hObject),'dir'));
+            if isfield(paramarray{i},'default')
+                set(paramEditHandles{i}{1},'string',paramarray{i}.default);
+            end
+        case 'file'
+            paramEditHandles{i}{1} = uicontrol('Parent',parentHandle,'Units','pixels','Style','edit','BackgroundColor','white');
+            paramEditHandles{i}{2} = uicontrol('Parent',parentHandle,'Units','pixels','Style','pushbutton','String','browse','UserData',struct('listID',i),'Callback',@(hObject,eventdata)browseCallback(hObject,eventdata,guidata(hObject),'file'));
+            if isfield(paramarray{i},'default')
+                set(paramEditHandles{i}{1},'string',paramarray{i}.default);
+            end
     end           
 end
 
@@ -142,8 +169,7 @@ if resizeParent
     placeUIControls( paramarray, paramTextHandles, paramEditHandles, sizeOfPanel, heightOfItems, margin,'lineSpacing',lineSpacing);
 end
 
-
-end
+%% Internal functions
 
 function colorPickerCallback(hObject,~,~)
     pickedColor = uisetcolor();
@@ -152,3 +178,39 @@ function colorPickerCallback(hObject,~,~)
     end      
 end
 
+function browseCallback(hObject,~,~,fileType)
+%Filytype should be dir or file
+    uData = get(hObject,'UserData');
+    defPath = get(paramEditHandles{uData.listID}{1},'String');
+    if isempty(defPath)
+        defPath = pwd;           
+    end    
+    switch fileType
+        case 'dir'
+            fileToOpen = uigetdir(defPath,'Please select a folder');
+        case 'file'
+            if isfield(paramarray{uData.listID},'filter')
+                filter = paramarray{uData.listID}.filter;
+            else
+                filter = '*';
+            end
+            switch paramarray{uData.listID}.fileOpenType
+                case 'get'                    
+                    [fileName,filePath] = uigetfile(filter,'Please select a file',defPath);                
+                case 'put'
+                    [fileName,filePath] = uiputfile(filter,'Please select a file',defPath);
+            end
+            if ~isnumeric(fileName) && ~isnumeric(filePath)
+                fileToOpen = fullfile(filePath,fileName);
+            else
+                fileToOpen = 0;
+            end                
+    end        
+    if ~isnumeric(fileToOpen)
+        set(paramEditHandles{uData.listID}{1},'String',fileToOpen);
+    end
+    
+end
+
+
+end

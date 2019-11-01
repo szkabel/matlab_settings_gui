@@ -55,6 +55,10 @@ for i=1:length(paramarray)
                 end                    
             end
             set(paramEditHandles{i},'value',find(selectedVals))
+        case 'dir'
+            set(paramEditHandles{i}{1},'string',paramValues{i});
+        case 'file'
+            set(paramEditHandles{i}{1},'string',paramValues{i});
     end
 end
 

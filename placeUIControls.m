@@ -68,12 +68,22 @@ for i=1:nofParams
         case 'colorPicker'
         case 'multiple-enum'
             currentHeight = min(maxMultipleEnumHeight,heightOfItems*length(paramarray{i}.values));            
-    end           
+    end
+    
     singleItemHeights(i) = currentHeight;
     sumHeightItems = sumHeightItems + currentHeight;
     
-    editPosition = [sizeOfPanel(3)/2+margin(1)/2, sizeOfPanel(4)-margin(2)-sumHeightItems-(i-1)*heightOfItems*lineSpacing, sizeOfPanel(3)/2-margin(1)*1.5 currentHeight];
-    set(paramEditHandles{i},'Position',editPosition);
+    editColWidth = sizeOfPanel(3)/2-margin(1)*1.5;
+    if strcmp(paramarray{i}.type,'dir') || strcmp(paramarray{i}.type,'file')        
+        editPositionLeft =  [sizeOfPanel(3)/2+margin(1)/2, sizeOfPanel(4)-margin(2)-sumHeightItems-(i-1)*heightOfItems*lineSpacing, editColWidth*2/3 currentHeight];
+        editPositionRight = [sizeOfPanel(3)/2+margin(1)/2+editColWidth*2/3, sizeOfPanel(4)-margin(2)-sumHeightItems-(i-1)*heightOfItems*lineSpacing, editColWidth*1/3 currentHeight];
+        set(paramEditHandles{i}{1},'Position',editPositionLeft);
+        set(paramEditHandles{i}{2},'Position',editPositionRight);
+    else
+        editPosition = [sizeOfPanel(3)/2+margin(1)/2, sizeOfPanel(4)-margin(2)-sumHeightItems-(i-1)*heightOfItems*lineSpacing, editColWidth currentHeight];    
+        set(paramEditHandles{i},'Position',editPosition);
+    end
+    
     set(paramTextHandles{i},'Position',[margin(1), sizeOfPanel(4)-margin(2)-sumHeightItems-(i-1)*heightOfItems*lineSpacing, sizeOfPanel(3)/2-margin(1)*1.5 currentHeight]);    
         
 end
