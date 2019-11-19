@@ -7,8 +7,9 @@ function [ paramcell ] = fetchUIControlValues( paramarray , paramEditHandles, ch
 % them in a cellarray. If the given parameter in the control field does not
 % fulfil the condition implied by the corresponding paramarray type
 % (currently we only check that the 'int' typed input field must be a
-% number) then we show a warning message to the user. In that case the
-% paramcell output is unreliable.
+% number and that directories are valid existing directories) then we show
+% a warning message to the user. In that case the paramcell output is
+% unreliable.
 %
 % INPUT:
 %   paramarray      See the documentation of generateUIControls.
@@ -77,6 +78,11 @@ for i=1:length(paramEditHandles)
         paramcell{i} = get(paramEditHandles{i},'BackgroundColor');
     elseif strcmp(paramarray{i}.type,'dir')
         paramcell{i} = get(paramEditHandles{i}{1},'String');        
+        if nargin<3 && ~exist(paramcell{i},'dir')
+            msg = ['Parameter ''' paramarray{i}.name ''' has to be a directory!'];
+            ok = 0;
+            break;
+        end
     elseif strcmp(paramarray{i}.type,'file')
         paramcell{i} = get(paramEditHandles{i}{1},'String');        
     end    
