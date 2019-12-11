@@ -34,6 +34,8 @@ function varargout = Settings_GUI(varargin)
 %    NOTE: in case the user press the close button this function raises an
 %    error with the following ID: 'Settings_GUI:noParameterProvided'
 %
+%   See also generateUIControls, fetchUIControlValues, fillOutUIControls
+%
 % COPYRIGHT
 % Settings Template Toolbox. All Rights Reversed. 
 % Copyright (C) 2019 Abel Szkalisity
