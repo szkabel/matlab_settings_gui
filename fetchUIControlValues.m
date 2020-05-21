@@ -63,10 +63,16 @@ for i=1:length(paramEditHandles)
     elseif strcmp(paramarray{i}.type,'int')
         paramcell{i} = str2num(get(paramEditHandles{i},'string')); %#ok<ST2NM> It can happen that we need convert into array.        
         %check for number, not for int.
-        if nargin<3 && (isempty(paramcell{i}))
-            msg = ['Parameter ''' paramarray{i}.name ''' has to be a number!'];
-            ok = 0;
-            break;
+        if ~isfield(paramarray{i},'numSpecs')
+            numSpecs = struct('integer',0,'scalar',0,'limits',[-Inf,Inf]);
+        else
+            numSpecs = paramarray{i}.numSpecs;
+        end                
+        if nargin<3
+            [ok,msg] = checkNumber(paramcell{i},numSpecs.integer,numSpecs.scalar,numSpecs.limits,paramarray{i}.name);
+            if ~ok               
+                break;
+            end
         end
     elseif strcmp(paramarray{i}.type,'enum') 
         paramcell{i} = paramarray{i}.values{(get(paramEditHandles{i},'value'))};

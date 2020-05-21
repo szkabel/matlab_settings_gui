@@ -20,7 +20,8 @@ function [ paramTextHandles, paramEditHandles] = generateUIControls( paramarray,
 %                   parameter value on the GUI)
 %                   .type: This determines the type of the parameter. It is
 %                   a string and should be one of the followings:
-%                       - 'int' for numbers [int]
+%                       - 'int'** for numbers [numeric] See the optional
+%                       parameters for other specifications (numSpecs)
 %                       - 'enum'** Possible values listed in .values
 %                       cellarray,
 %                       .default describes the index in the list. Displays
@@ -51,7 +52,7 @@ function [ paramTextHandles, paramEditHandles] = generateUIControls( paramarray,
 %                   the options to be listed.
 %                   .lim: A vector with length of 2 specifying the minimum
 %                   and maximum (in this order) values to be allowed for
-%                   the slider.                  
+%                   the slider.
 %                   .fileOpenType This a string value for file selection.
 %                   Use either 'get' or 'put'. Use get if you want to query
 %                   for an existing file and put for new files
@@ -60,6 +61,14 @@ function [ paramTextHandles, paramEditHandles] = generateUIControls( paramarray,
 %                   documentation of uigetfile and uiputfile. However this
 %                   does not  prevent the user from copying an inproper
 %                   file into the text field.
+%                   .numSpecs (Optional) A structure with the following
+%                   fields:
+%                       .integer A boolean indicating whether the input
+%                       should be integer
+%                       .scalar A boolean indicating whether the input has
+%                       to be scalar
+%                       .limits A 2 element vector of numbers indicating
+%                       the acceptable limits of the number (inclusive)
 %                       
 %   parentHandle    handle to the parent object to which we're going to add
 %                   the uicontrols. It must have a position property.
