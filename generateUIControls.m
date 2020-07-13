@@ -26,7 +26,8 @@ function [ paramTextHandles, paramEditHandles] = generateUIControls( paramarray,
 %                       cellarray,
 %                       .default describes the index in the list. Displays
 %                       as a drop-down list [index of the entry] 
-%                       - 'str' standing for a text input [string]
+%                       - 'str' standing for a text input [string] See the
+%                       optional parameters for other specifications (strSpecs)
 %                       - 'slider'** Limits are listed in .lim [double]
 %                       - 'checkbox' 0 or 1 and displays a checkbox [int: 0 / 1]
 %                       - 'colorPicker' RGB triplet to store [RGB triplet

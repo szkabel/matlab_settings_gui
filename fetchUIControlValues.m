@@ -60,6 +60,17 @@ ok = 1;
 for i=1:length(paramEditHandles)
     if strcmp(paramarray{i}.type,'str')
         paramcell{i} = get(paramEditHandles{i},'string');
+        if ~isfield(paramarray{i},'strSpecs')
+            numSpecs = struct('forbidden', 0, 'capital', [], 'number', [], 'glyph', [], 'space', []);
+        else
+            numSpecs = paramarray{i}.strSpecs;
+        end                
+        if nargin<3
+            [ok,msg] = checkString(paramcell{i},numSpecs.forbidden,numSpecs.capital,numSpecs.number,numSpecs.glyph,numSpecs.space,paramarray{i}.name);
+            if ~ok               
+                break;
+            end
+        end
     elseif strcmp(paramarray{i}.type,'int')
         paramcell{i} = str2num(get(paramEditHandles{i},'string')); %#ok<ST2NM> It can happen that we need convert into array.        
         %check for number, not for int.
