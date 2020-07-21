@@ -40,15 +40,15 @@ if isempty(toBeChecked)
 end
 
 if ~isempty(forbidden)
-    idx = cell2mat(strfind(forbidden, toBeChecked));
-    if ~isempty(idx)
+    idx = any(strcmp(forbidden, toBeChecked));
+    if idx
         bool = 0;
         msg = [ text ' already exist!'];
         return;
     end
 end
 
-if ~isempty(forbidden)
+if ~isempty(capital)
     if capital == 1 && ~any(isstrprop(toBeChecked,'upper'))
         bool = 0;
         msg = [text ' must contain capital letter!'];
@@ -61,11 +61,11 @@ if ~isempty(forbidden)
 end
 
 if ~isempty(number)
-    if number == 1 && regexp(toBeChecked,'\d')<1
+    if number == 1 && isempty(regexp(toBeChecked,'\d','once'))
         bool = 0;
         msg = [text ' must contain number!'];
         return;
-    elseif number == 0 && regexp(toBeChecked,'\d')>0
+    elseif number == 0 && ~isempty(regexp(toBeChecked,'\d','once'))
         bool = 0;
         msg = [text ' must not contain number!'];
         return;
@@ -73,11 +73,11 @@ if ~isempty(number)
 end
 
 if ~isempty(glyph)
-    if glyph == 1 && regexp(toBeChecked,'\W')<1
+    if glyph == 1 && isempty(regexp(toBeChecked,'\W','once'))
         bool = 0;
         msg = [text ' must contain glyph!'];
         return;
-    elseif glyph == 0 && regexp(toBeChecked,'\W')>0
+    elseif glyph == 0 && ~isempty(regexp(toBeChecked,'\W','once'))
         bool = 0;
         msg = [text ' must not contain glyph!'];
         return;
@@ -85,11 +85,11 @@ if ~isempty(glyph)
 end
 
 if ~isempty(space)
-    if space == 1 && regexp(toBeChecked,'\s')<1
+    if space == 1 && isempty(regexp(toBeChecked,'\s','once'))
         bool = 0;
         msg = [text ' must contain space!'];
         return;
-    elseif space == 0 && regexp(toBeChecked,'\s')>0
+    elseif space == 0 && ~isempty(regexp(toBeChecked,'\s', 'once'))
         bool = 0;
         msg = [text ' must not contain space!'];
         return;
