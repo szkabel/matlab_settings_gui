@@ -24,6 +24,30 @@ function varargout = Settings_GUI(varargin)
 %                   used to check if the parameters are fulfilling some
 %                   requirements. Please see the checkHandle documentation
 %                   of the fetchUIControlValues.m file.
+%   checkVisibility See the documentation in generateUIControls.
+%   checkInterimValues boolean. The dynamic visualization feature provided
+%                   by the checkVisibility function handle above may be
+%                   easier to implement if the visibility function does not
+%                   have to check whether all parameters provided by the
+%                   user are faithful to the description in paramarray
+%                   (e.g. numbers are really numbers or just some arbitrary
+%                   string). Generally parameters are checked to be correct
+%                   when the GUI returns with the answers, but not whilst
+%                   the user is still in the process of filling.
+%                   Consequently by default, the checkVisibility function's
+%                   paramcell input is NOT checked by the provided
+%                   checkFunction (or the default checks if it is not
+%                   provided). This functionality is encoded in the default
+%                   false value of this boolean variable. Set it to true if
+%                   you want to check also the parameters before sending it
+%                   to the checkVisibility function. In this case you do
+%                   not need to check the integrity of the returned values
+%                   within the checkVisibility function itself. NOTE: if
+%                   you set this to true, you must pay attention to proper
+%                   default variables, as in that case the check functions
+%                   are also called upon the first loading. In case of
+%                   failure every input field will be shown.
+%          
 %
 % OUTPUT:
 %    paramcell      A cellarray with equal length to paramarray. It
@@ -93,6 +117,8 @@ validAlignments = {'center','left','right'};
 checkAlignment = @(x) any(validatestring(x,validAlignments));
 addParameter(p,'infoAlignment','left',checkAlignment);
 addParameter(p,'title','Settings',@ischar);
+addParameter(p,'checkVisibility',@(a,b)(defaultCheckVisibility(a,b,true)));
+addParameter(p,'checkInterimValues',false);
 parse(p,varargin{:});
 
 paramarray = p.Results.paramarray;
@@ -101,6 +127,7 @@ infoText = p.Results.infoText;
 if ~isempty(p.Results.checkFunction)
     uData.checkFunction = p.Results.checkFunction;
 end
+uData.checkVisibility = p.Results.checkVisibility;
 
 % Set parental relation for the scrollbar
 set(handles.uiPanel_InnerSettings,'Parent',handles.uiPanel_Settings);
@@ -109,7 +136,20 @@ set(handles.uiPanel_InnerSettings,'Parent',handles.uiPanel_Settings);
 uData = setUpGUIsize(uData);
 
 set(handles.text_Info,'String',infoText);
-[ uData.paramTextHandles, uData.paramEditHandles] = generateUIControls( paramarray, handles.uiPanel_InnerSettings, uData.sizeParameters.itemHeight, uData.sizeParameters.margin,'resizeParent',true);
+if p.Results.checkInterimValues
+[ uData.paramTextHandles, uData.paramEditHandles] = generateUIControls(...
+    paramarray, handles.uiPanel_InnerSettings, uData.sizeParameters.itemHeight, uData.sizeParameters.margin,...
+    'resizeParent',true,...
+    'divisionRatio',uData.sizeParameters.textRatio,...
+    'checkVisibility',p.Results.checkVisibility,...
+    'checkHandle',p.Results.checkFunction);
+else
+    [ uData.paramTextHandles, uData.paramEditHandles] = generateUIControls(...
+    paramarray, handles.uiPanel_InnerSettings, uData.sizeParameters.itemHeight, uData.sizeParameters.margin,...
+    'resizeParent',true,...
+    'divisionRatio',uData.sizeParameters.textRatio,...
+    'checkVisibility',p.Results.checkVisibility);
+end
 uData.paramarray = paramarray;
 
 %Calculate default opening height and some sizeParameters:
@@ -127,7 +167,7 @@ handles.figure1.Position(4) = min(defaultOpenHeight,uData.sizeParameters.maxDefa
 set(handles.text_Info,'HorizontalAlignment',p.Results.infoAlignment);
 set(handles.figure1,'Name',p.Results.title);
 
-% Set scrollbar
+% START of setting scrollbar
 hPanel = handles.uiPanel_InnerSettings;
 % Get the panel's underlying JPanel object reference
 jPanel = hPanel.JavaFrame.getGUIDEView.getParent;
@@ -158,7 +198,7 @@ hjScrollPanel.getVerticalScrollBar().setValue(0);
 hjScrollPanel.getVerticalScrollBar().setUnitIncrement(5)
 
 % UIWAIT makes Settings_GUI wait for user response (see UIRESUME)
- uiwait(handles.figure1);
+uiwait(handles.figure1);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Settings_GUI_OutputFcn(hObject, eventdata, handles) 
@@ -174,6 +214,7 @@ if isfield(handles,'figure1')
     figure1_CloseRequestFcn(hObject, eventdata, handles);
 else
     error('Settings_GUI:noParameterProvided','The required parameters were not closed.');
+    %varargout{1} = [];
 end
 
 
@@ -228,7 +269,6 @@ buttonHeight = uData.sizeParameters.buttonHeight;
 infoHeight = uData.sizeParameters.infoHeight;
 scrollBarSize = uData.sizeParameters.scrollBarSide;
 
-
 figurePos = get(hObject,'Position');
 set(handles.text_Info,'Position',[sideMargin,figurePos(4)-sideMargin-infoHeight,figurePos(3)-2*sideMargin,infoHeight]);
 set(handles.uiPanel_Settings,'Position',[sideMargin,innerMargin+sideMargin+buttonHeight,figurePos(3)-2*sideMargin,figurePos(4)-2*innerMargin-2*sideMargin-infoHeight-buttonHeight]);
@@ -236,7 +276,11 @@ requiredHeight = handles.uiPanel_InnerSettings.Position(4);
 set(handles.uiPanel_InnerSettings,'Position',[scrollBarSize/2,0,figurePos(3)-2*sideMargin-scrollBarSize ,requiredHeight]);
 set(handles.Button_OK,'Position',[(figurePos(3)-buttonWidth)/2,sideMargin,buttonWidth,buttonHeight]);
 
-placeUIControls( uData.paramarray, uData.paramTextHandles, uData.paramEditHandles, handles.uiPanel_InnerSettings.Position, uData.sizeParameters.itemHeight, uData.sizeParameters.margin);
+placeUIControls( ...
+    uData.paramarray, uData.paramTextHandles, uData.paramEditHandles,...
+    handles.uiPanel_InnerSettings.Position, uData.sizeParameters.itemHeight, uData.sizeParameters.margin,...
+    'divisionRatio',uData.sizeParameters.textRatio,...
+    'checkVisibility',uData.checkVisibility);
     
 function uData = setUpGUIsize(uData)
 
@@ -249,4 +293,5 @@ uData.sizeParameters.maxDefaultFigureHeight = 650;
 uData.sizeParameters.itemHeight = 20;
 uData.sizeParameters.margin = [10 10];
 uData.sizeParameters.scrollBarSide = 25;
+uData.sizeParameters.textRatio = 0.5;
 

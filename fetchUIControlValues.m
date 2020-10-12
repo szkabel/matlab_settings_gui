@@ -9,7 +9,9 @@ function [ paramcell ] = fetchUIControlValues( paramarray , paramEditHandles, ch
 % (currently we only check that the 'int' typed input field must be a
 % number and that directories are valid existing directories) then we show
 % a warning message to the user. In that case the paramcell output is
-% unreliable.
+% unreliable. NOTE: In case of default behaviour (i.e. no checkHandle
+% provided), then only the currently visible items are checked. Otherwise
+% it is all left to your own check function.
 %
 % INPUT:
 %   paramarray      See the documentation of generateUIControls.
@@ -24,8 +26,7 @@ function [ paramcell ] = fetchUIControlValues( paramarray , paramEditHandles, ch
 %   checkHandle     A handle to a function (which can be the string with
 %                   the function name), that is going to be called with one
 %                   parameter: the potential paramcell output. This
-%                   parameter is OPTIONAL. If it is provided then the int
-%                   typed parameters are not checked to be number the only
+%                   parameter is OPTIONAL. If it is provided then the only
 %                   parameter check that is run is the given function. The
 %                   function must return a boolean value and a message
 %                   (string) to display that describes the problem if the
@@ -44,6 +45,8 @@ function [ paramcell ] = fetchUIControlValues( paramarray , paramEditHandles, ch
 %                       - multiple-enum -> cellarray of strings
 %                       - string -> string
 %                       - dir -> string
+%                       - buttonGroup -> cellarray with the inner
+%                       paramcells (recursively)
 %
 % COPYRIGHT
 % Settings Template Toolbox. All Rights Reversed. 
@@ -56,17 +59,19 @@ function [ paramcell ] = fetchUIControlValues( paramarray , paramEditHandles, ch
 nofParams = length(paramarray);
 paramcell = cell(1,nofParams);
 ok = 1;
+checkFuncNotProvided = nargin<3; %bool
 
 for i=1:length(paramEditHandles)
     if strcmp(paramarray{i}.type,'str')
         paramcell{i} = get(paramEditHandles{i},'string');
         if ~isfield(paramarray{i},'strSpecs')
-            numSpecs = struct('forbidden', 0, 'capital', [], 'number', [], 'glyph', [], 'space', []);
+            strSpecs = struct('forbidden', 0, 'capital', [], 'number', [], 'glyph', [], 'space', []);
         else
-            numSpecs = paramarray{i}.strSpecs;
+            strSpecs = paramarray{i}.strSpecs;
         end                
-        if nargin<3
-            [ok,msg] = checkString(paramcell{i},numSpecs.forbidden,numSpecs.capital,numSpecs.number,numSpecs.glyph,numSpecs.space,paramarray{i}.name);
+        editHandle = paramEditHandles{i};
+        if checkFuncNotProvided && strcmp(editHandle.Visible,'on')
+            [ok,msg] = checkString(paramcell{i},strSpecs.forbidden,strSpecs.capital,strSpecs.number,strSpecs.glyph,strSpecs.space,paramarray{i}.name);
             if ~ok               
                 break;
             end
@@ -78,8 +83,9 @@ for i=1:length(paramEditHandles)
             numSpecs = struct('integer',0,'scalar',0,'limits',[-Inf,Inf]);
         else
             numSpecs = paramarray{i}.numSpecs;
-        end                
-        if nargin<3
+        end              
+        editHandle = paramEditHandles{i};
+        if checkFuncNotProvided && strcmp(editHandle.Visible,'on')
             [ok,msg] = checkNumber(paramcell{i},numSpecs.integer,numSpecs.scalar,numSpecs.limits,paramarray{i}.name);
             if ~ok               
                 break;
@@ -94,15 +100,36 @@ for i=1:length(paramEditHandles)
     elseif strcmp(paramarray{i}.type,'colorPicker')
         paramcell{i} = get(paramEditHandles{i},'BackgroundColor');
     elseif strcmp(paramarray{i}.type,'dir')
-        paramcell{i} = get(paramEditHandles{i}{1},'String');        
-        if nargin<3 && ~exist(paramcell{i},'dir')
-            msg = ['Parameter ''' paramarray{i}.name ''' has to be a directory!'];
+        paramcell{i} = get(paramEditHandles{i}{1},'String');
+        editHandle = paramEditHandles{i}{1};
+        if checkFuncNotProvided && strcmp(editHandle.Visible,'on') && ~exist(paramcell{i},'dir')
+            msg = ['Parameter ''' paramarray{i}.name ''' has to be an existing directory!'];
             ok = 0;
             break;
         end
     elseif strcmp(paramarray{i}.type,'file')
         paramcell{i} = get(paramEditHandles{i}{1},'String');        
-    end    
+        editHandle = paramEditHandles{i}{1};
+        if strcmp(paramarray{i}.fileOpenType,'get') && checkFuncNotProvided && strcmp(editHandle.Visible,'on') && ~exist(paramcell{i},'file')
+            msg = ['Parameter ''' paramarray{i}.name ''' does not exist on the file system!'];
+            ok = 0;
+            break;
+        end
+    elseif strcmp(paramarray{i}.type,'buttonGroup')
+        nofSubGroups = length(paramEditHandles{i})-1;
+        paramcell{i} = cell(nofSubGroups,1);
+        for j=1:nofSubGroups
+            parEditHandles = paramEditHandles{i}{j+1}; %Do like this as currently only level 2 indexing works for the myHandleCellArrays class.
+            if checkFuncNotProvided               
+                paramcell{i}{j} = fetchUIControlValues(paramarray{i}.groupFields,parEditHandles(1:end-1));
+            else
+                %If there was a check function provided then on lower levels
+                %it's just a fake one
+                fakeCheckFcn = @(x)deal(1,'Fake check function');            
+                paramcell{i}{j} = fetchUIControlValues(paramarray{i}.groupFields,parEditHandles(1:end-1),fakeCheckFcn);
+            end
+        end
+    end
 end
 
 if nargin>=3
