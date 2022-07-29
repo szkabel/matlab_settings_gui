@@ -128,7 +128,9 @@ set(handles.figure1,'Name',p.Results.title);
 % Set scrollbar
 hPanel = handles.uiPanel_InnerSettings;
 % Get the panel's underlying JPanel object reference
+warning('off','MATLAB:ui:javaframe:PropertyToBeRemoved');
 jPanel = hPanel.JavaFrame.getGUIDEView.getParent;
+warning('on','MATLAB:ui:javaframe:PropertyToBeRemoved');
  
 % Embed the JPanel within a new JScrollPanel object
 jScrollPanel = javaObjectEDT(javax.swing.JScrollPane(jPanel));
@@ -139,7 +141,9 @@ jScrollPanel.setBorder([]);
 % Place the JScrollPanel in same GUI location as the original panel
 pixelpos = getpixelposition(hPanel);
 hParent = hPanel.Parent;
+warning('off','MATLAB:ui:javacomponent:FunctionToBeRemoved');
 [hjScrollPanel, hScrollPanel] = javacomponent(jScrollPanel, pixelpos, hParent);
+warning('on','MATLAB:ui:javacomponent:FunctionToBeRemoved');
 hScrollPanel.Units = 'norm';
 hScrollPanel.OuterPosition = [0 0 1 1];
 
