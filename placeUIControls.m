@@ -116,7 +116,7 @@ function [sumHeightItems] = placeSingleItem(paramStruct,paramTextHandle,paramEdi
             %Set the header for the button group. This one covers the whole
             %width.
             sumHeightItems = sumHeightItems + currentHeight + heightOfItems*groupSpacing;
-            placeTextHandle(paramTextHandle{1},margin,sizeOfPanel,sumHeightItems, textRatio, currentHeight, 'full');        
+            placeTextHandle(paramTextHandle{1},margin,sizeOfPanel,sumHeightItems, textRatio, currentHeight, heightOfItems, 'full');        
             %Add regular margin also below this.
             sumHeightItems = sumHeightItems + heightOfItems*lineSpacing;
 
@@ -193,7 +193,7 @@ function [sumHeightItems] = placeSingleItem(paramStruct,paramTextHandle,paramEdi
                 set(paramEditHandle,'Position',editPosition,'Visible','on');
             end
 
-            placeTextHandle(paramTextHandle,margin,sizeOfPanel,sumHeightItems, textRatio, currentHeight, 'default');
+            placeTextHandle(paramTextHandle,margin,sizeOfPanel,sumHeightItems, textRatio, currentHeight,heightOfItems, 'default');
 
             % Add margin
             sumHeightItems = sumHeightItems + heightOfItems*lineSpacing;
@@ -212,7 +212,7 @@ end
 
 end
 
-function placeTextHandle(myTextHandles,margin,sizeOfPanel,sumHeightItems, textRatio, currentHeight, width)
+function placeTextHandle(myTextHandles,margin,sizeOfPanel,sumHeightItems, textRatio, currentHeight, singleHeight, width)
 %Width refers to the fact if the text label is 'full' or anything else (default)
     infoMargin = 2;
     if strcmp(width,'full')
@@ -221,13 +221,13 @@ function placeTextHandle(myTextHandles,margin,sizeOfPanel,sumHeightItems, textRa
         w = sizeOfPanel(3)*textRatio-margin(1)*1.5;
     end
     if iscell(myTextHandles) && length(myTextHandles) == 2
-        set(myTextHandles{1},'Position',[margin(1), sizeOfPanel(4)-margin(2)-sumHeightItems currentHeight currentHeight],'Visible','on');
-        resizedImg = imresize(myTextHandles{1}.CData,[currentHeight currentHeight]);
+        set(myTextHandles{1},'Position',[margin(1), sizeOfPanel(4)-margin(2)-sumHeightItems+currentHeight-singleHeight singleHeight singleHeight],'Visible','on');
+        resizedImg = imresize(myTextHandles{1}.CData,[singleHeight singleHeight]);
         resizedImg(resizedImg>1) = 1;
         set(myTextHandles{1},'CData',resizedImg);
-        set(myTextHandles{2},'Position',[margin(1)+currentHeight+infoMargin, sizeOfPanel(4)-margin(2)-sumHeightItems w-currentHeight-infoMargin  currentHeight],'Visible','on');
+        set(myTextHandles{2},'Position',[margin(1)+singleHeight+infoMargin, sizeOfPanel(4)-margin(2)-sumHeightItems w-singleHeight-infoMargin  currentHeight],'Visible','on');
     else
-        set(myTextHandles,'Position',[margin(1)+currentHeight+infoMargin, sizeOfPanel(4)-margin(2)-sumHeightItems w-currentHeight-infoMargin currentHeight],'Visible','on');
+        set(myTextHandles,'Position',[margin(1)+singleHeight+infoMargin, sizeOfPanel(4)-margin(2)-sumHeightItems w-singleHeight-infoMargin currentHeight],'Visible','on');
     end    
 end
 
